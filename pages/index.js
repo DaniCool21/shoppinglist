@@ -1,115 +1,85 @@
 import Head from 'next/head'
 import styles from '../styles/Home.module.css';
+import ShoppingList from '../components/ShoppingList.js';
+import Navbar from '../components/Navbar';
+import React, {useState, useRef, useEffect} from 'react';
+import { v4 as uuidv4 } from 'uuid';
+
+const LOCAL_STORAGE_KEY = 'shoppingList.items'
+
 
 export default function Home() {
+
+  const [items, setItems] = useState([]);
+  const NewItemRef = useRef();
+
+  useEffect(() => {
+    const storedItems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY))
+    if(storedItems) setItems( prevItems => [...prevItems, ...storedItems] );
+  }, [])
+
+
+  useEffect(() => {
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(items))
+  }, [items])
+
+
+  function AddItem(e)
+  {
+    const name = NewItemRef.current.value;
+    if(name === '') return;
+    setItems(prevItems => {
+      return [...prevItems, {id: uuidv4(), name: name, completed: false}]
+    })
+    NewItemRef.current.value = null;
+  }
+
+  function ToggleItem(id)
+  {
+    const newItems = [...items];
+    const item = newItems.find(item => item.id === id);
+    item.completed = !item.completed;
+    setItems(newItems);
+  }
+
+  function ClearItems()
+  {
+    const newItems = [];
+    setItems(newItems);
+  }
+
+  function ClearCompleted()
+  {
+    const newItems = items.filter(item => !item.completed);
+    setItems(newItems);
+  }
+
+
   return (
-    <div className={styles.container}>
+    <div className={styles.NoPadding}>
       <Head>
-        <title>Create Next App</title>
+        <title>Shopping List</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
 
-        <p className={styles.description}>
-          Get started by editing <code>pages/index.js</code>
-        </p>
+      <div className={styles.someCSS}>
+          <Navbar/>
+      </div>
+      
+        
+      <h1 className={styles.Apptitle}>Shopping List</h1>
 
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className={styles.card}
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/import?filter=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
-      </main>
-
-      <footer>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel" className={styles.logo} />
-        </a>
-      </footer>
-
-      <style jsx>{`
-        main {
-          padding: 5rem 0;
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-        }
-        footer {
-          width: 100%;
-          height: 100px;
-          border-top: 1px solid #eaeaea;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-        }
-        footer img {
-          margin-left: 0.5rem;
-        }
-        footer a {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          text-decoration: none;
-          color: inherit;
-        }
-        code {
-          background: #fafafa;
-          border-radius: 5px;
-          padding: 0.75rem;
-          font-size: 1.1rem;
-          font-family: Menlo, Monaco, Lucida Console, Liberation Mono,
-            DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace;
-        }
-      `}</style>
-
-      <style jsx global>{`
-        html,
-        body {
-          padding: 0;
-          margin: 0;
-          font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto,
-            Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue,
-            sans-serif;
-        }
-        * {
-          box-sizing: border-box;
-        }
-      `}</style>
+      <div className={styles.container}>
+        <ShoppingList ItemList={items} ToggleItem={ToggleItem}/>
+        <input ref={NewItemRef} type="text" placeholder="Add Item"/>
+        <button onClick={AddItem}>Add Item</button>
+        <button onClick={ClearItems}>Clear all items</button>
+        <button onClick={ClearCompleted}>Clear Completed</button>
+        <div>Number of item to buy: {items.filter(item => !item.completed).length}</div>
+        
+      </div>
+      
     </div>
   )
 }
